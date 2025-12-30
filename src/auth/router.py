@@ -8,11 +8,14 @@ import uuid
 
 from database.main import get_session
 from .service import AuthService
-from database.auth.schema import UserCreateModel, UserModel, UserLoginModel
-from .utils import create_access_token, decode_access_token, verify_password
+from database.auth.schema import UserCreateModel, UserModel, UserLoginModel, UserBookReviewModel
+from .utils import create_access_token, verify_password
 from config import env_config
 from .dependencies import RefreshTokenBearer, AccessTokenBearer, get_current_user, RoleChecker
 from database.redis import add_jti_to_blocklist
+from src.error import (
+    UserNotFoundError, InvalidCredentialsError, InsufficientPermissionsError
+)
 
 auth_router = APIRouter()
 auth_service = AuthService()
@@ -37,10 +40,10 @@ async def login_user(
     user = await auth_service.get_user_by_email(email, session)
 
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+        raise UserNotFoundError()
     
     if not verify_password(password, user.password_hash):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials.")
+        raise InvalidCredentialsError()
     
     try:
         access_token = create_access_token(
@@ -74,7 +77,7 @@ async def login_user(
             }
         )
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail=f"{str(e)[:100]}")
+        raise InsufficientPermissionsError()
 
 
 @auth_router.get('/refresh-token', status_code=status.HTTP_200_OK)
@@ -98,7 +101,7 @@ async def get_new_access_token(token_details :dict = Depends(RefreshTokenBearer(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail=f"{str(e)[:100]}")
 
 
-@auth_router.get('/me', response_model=UserModel, status_code=status.HTTP_200_OK)
+@auth_router.get('/me', response_model=UserBookReviewModel, status_code=status.HTTP_200_OK)
 async def get_current_user(
         user = Depends(get_current_user), 
         _:bool = Depends(role_checker)

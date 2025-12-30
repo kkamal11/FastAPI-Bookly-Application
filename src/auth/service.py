@@ -5,6 +5,7 @@ from fastapi import status
 from database.auth.models import User
 from database.auth.schema import UserCreateModel
 from .utils import generate_password_hash, verify_password
+from src.error import UserAlreadyExistsError
 
 
 class AuthService:
@@ -25,7 +26,7 @@ class AuthService:
         new_user.role = "user"
         user_exists = await self.check_user_exists(user_data_dict["email"], session)
         if user_exists:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail="User with this email already exists.")
+            raise UserAlreadyExistsError()
         session.add(new_user)
         await session.commit()
         await session.refresh(new_user)

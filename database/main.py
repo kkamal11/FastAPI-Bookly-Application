@@ -5,6 +5,8 @@ from sqlalchemy.orm import sessionmaker
 
 from config import env_config
 
+from .models import Books, User, Reviews
+
 engine = create_engine(
     url=env_config.DATABASE_URL,
     echo=env_config.ECHO_SQL,

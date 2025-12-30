@@ -10,6 +10,7 @@ from alembic import context
 # imports
 from database.auth.models import User
 from database.books.models import Books
+from database.reviews import models
 from sqlmodel import SQLModel
 from config import env_config
 

@@ -5,9 +5,6 @@ from datetime import datetime
 from typing import List, Optional
 import uuid 
 
-from database.books import models
-
-
 class User(SQLModel, table=True):
     __tablename__ = "users"
     uid: uuid.UUID = Field(
@@ -33,14 +30,17 @@ class User(SQLModel, table=True):
     updated_at: datetime = Field(sa_column=Column(
         pg.TIMESTAMP, default=datetime.utcnow
     ))
-    books: List["models.Books"] = Relationship(
+    books: List["Books"] = Relationship(
         back_populates="user",
         sa_relationship_kwargs={
             "cascade": "all, delete-orphan",
             "lazy": "selectin"}
         )
-
-
-
+    reviews: List["Reviews"] = Relationship(
+        back_populates="user",
+        sa_relationship_kwargs={
+            "cascade": "all, delete-orphan",
+            "lazy": "selectin"}
+        )
     def __repr__(self) -> str:
         return f"<User[username={self.username}, email={self.email}]>"

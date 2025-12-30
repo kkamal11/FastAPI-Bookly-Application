@@ -11,6 +11,8 @@ from database.redis import is_jti_in_blocklist
 from database.main import get_session
 from .service import AuthService
 from database.auth.models import User
+from src.error import InvalidTokenError, RevokedTokenError, InvalidCredentialsError,\
+AccessTokenRequiredError, RefreshTokenRequiredError, UserNotFoundError, InsufficientPermissionsError
 
 user_service = AuthService()
 
@@ -27,10 +29,7 @@ class TokenBearer(HTTPBearer):
         # print(creds.scheme)
         # print(creds.credentials)
         if not creds:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid authorization credentials"
-            )
+            raise InvalidCredentialsError()
         
         if creds.scheme.lower() != "bearer":
             raise HTTPException(
@@ -41,13 +40,10 @@ class TokenBearer(HTTPBearer):
         token = creds.credentials 
         token_data = self.is_token_valid(token)
         if not token_data:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authorization token is expired or invalid.")
+            raise InvalidTokenError()
         
         if await is_jti_in_blocklist(token_data['jti']):
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail={
-                "error":"Token has been revoked.",
-                "resolution":"Please login again to obtain a new token."
-            })
+            raise RevokedTokenError()
 
         self.verify_token_data(token_data)
 
@@ -82,7 +78,7 @@ class AccessTokenBearer(TokenBearer):
         Verifies the token data to ensure it contains required fields.
         """
         if token_data and token_data['refresh']:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Please provide a valid access token, not a refresh token.")
+            raise AccessTokenRequiredError()
 
 
 class RefreshTokenBearer(TokenBearer):
@@ -98,7 +94,7 @@ class RefreshTokenBearer(TokenBearer):
         Verifies the token data to ensure it contains required fields.
         """
         if token_data and not token_data['refresh']:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Please provide a valid refresh token, not an access token.")
+            raise RefreshTokenRequiredError()
 
 async def get_current_user(
         token_details: dict = Depends(AccessTokenBearer()),
@@ -109,7 +105,7 @@ async def get_current_user(
     email = token_details['user']['email']
     user = await user_service.get_user_by_email(email, session)
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+        raise UserNotFoundError()
     return user
 
 class RoleChecker:
@@ -119,8 +115,5 @@ class RoleChecker:
     async def __call__(self, current_user: User = Depends(get_current_user)) -> None:
         if current_user.role in self.allowed_roles:
             return True
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You do not have the necessary permissions to access this resource."
-        )
+        raise InsufficientPermissionsError()
 

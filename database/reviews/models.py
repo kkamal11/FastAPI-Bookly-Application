@@ -1,11 +1,11 @@
 from sqlmodel import SQLModel, Field, Column, Relationship
 import sqlalchemy.dialects.postgresql as pg
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional
 import uuid 
 
-class Books(SQLModel, table=True):
-    __tablename__ = "books"
+class Reviews(SQLModel, table=True):
+    __tablename__ = "reviews"
     uid: uuid.UUID = Field(
         sa_column=Column(
             pg.UUID(as_uuid=True),
@@ -14,17 +14,15 @@ class Books(SQLModel, table=True):
             default=uuid.uuid4,
         )
     )
-    title: str
-    author: str
-    published_date: datetime = Field(sa_column=Column(
-        pg.TIMESTAMP, default=datetime.utcnow
-    ))
-    publisher: str
-    page_count: int
-    language: str
+    rating: int = Field(lt=5, gt=0)
+    review_text: str
     user_uid: Optional[uuid.UUID] = Field(
         default=None,
         foreign_key="users.uid"
+    )
+    book_uid: Optional[uuid.UUID] = Field(
+        default=None,
+        foreign_key="books.uid"
     )
     created_at: datetime = Field(sa_column=Column(
         pg.TIMESTAMP, default=datetime.utcnow
@@ -32,14 +30,11 @@ class Books(SQLModel, table=True):
     updated_at: datetime = Field(sa_column=Column(
         pg.TIMESTAMP, default=datetime.utcnow
     ))
-    user: Optional["User"] = Relationship(back_populates="books")
-    reviews: List["Reviews"] = Relationship(
-        back_populates="book",
-        sa_relationship_kwargs={
-            "cascade": "all, delete-orphan",
-            "lazy": "selectin"}
-        )
+    user: Optional["User"] = Relationship(back_populates="reviews")
+    book: Optional["Books"] = Relationship(back_populates="reviews")
 
 
     def __repr__(self) -> str:
-        return f"<Book[title={self.title}, author={self.author}]>"
+        return f"<Review[Rating={self.rating}, reviewer={self.user.username if self.user else None}]>"
+    
+
