@@ -98,7 +98,7 @@ async def get_new_access_token(token_details :dict = Depends(RefreshTokenBearer(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail=f"{str(e)[:100]}")
 
 
-@auth_router.get('/me')
+@auth_router.get('/me', response_model=UserModel, status_code=status.HTTP_200_OK)
 async def get_current_user(
         user = Depends(get_current_user), 
         _:bool = Depends(role_checker)

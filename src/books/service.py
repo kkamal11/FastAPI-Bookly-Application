@@ -19,6 +19,12 @@ class BookService:
         result = await session.execute(query)
         book = result.scalar_one_or_none()
         return book
+    
+    async def get_user_books(self, session: AsyncSession, user_uid: str) -> List[Book]:
+        query = select(Books).where(Books.user_uid == user_uid).order_by(desc(Books.created_at))
+        result = await session.execute(query)
+        books = result.scalars().all()
+        return books
 
     async def create_book(self, session: AsyncSession, book_data: BookCreateModel, user_uid: str) -> Book:
         book_data_dict = book_data.model_dump()

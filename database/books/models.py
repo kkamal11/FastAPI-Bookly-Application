@@ -1,8 +1,10 @@
-from sqlmodel import SQLModel, Field, Column
+from sqlmodel import SQLModel, Field, Column, Relationship
 import sqlalchemy.dialects.postgresql as pg
 from datetime import datetime
 from typing import Optional
 import uuid 
+
+from database.auth import models
 
 class Books(SQLModel, table=True):
     __tablename__ = "books"
@@ -26,12 +28,13 @@ class Books(SQLModel, table=True):
         default=None,
         foreign_key="users.uid"
     )
-    created_at : datetime = Field(sa_column=Column(
+    created_at: datetime = Field(sa_column=Column(
         pg.TIMESTAMP, default=datetime.utcnow
     ))
-    updated_at : datetime = Field(sa_column=Column(
+    updated_at: datetime = Field(sa_column=Column(
         pg.TIMESTAMP, default=datetime.utcnow
     ))
+    user: Optional["models.User"] = Relationship(back_populates="books")
 
 
     def __repr__(self) -> str:
