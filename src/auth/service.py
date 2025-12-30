@@ -22,6 +22,7 @@ class AuthService:
         user_data_dict = user_data.model_dump()
         new_user = User(**user_data_dict)
         new_user.password_hash = generate_password_hash(user_data_dict['password'])
+        new_user.role = "user"
         user_exists = await self.check_user_exists(user_data_dict["email"], session)
         if user_exists:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,detail="User with this email already exists.")

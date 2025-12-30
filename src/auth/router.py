@@ -11,11 +11,12 @@ from .service import AuthService
 from database.auth.schema import UserCreateModel, UserModel, UserLoginModel
 from .utils import create_access_token, decode_access_token, verify_password
 from config import env_config
-from .dependencies import RefreshTokenBearer, AccessTokenBearer
+from .dependencies import RefreshTokenBearer, AccessTokenBearer, get_current_user, RoleChecker
 from database.redis import add_jti_to_blocklist
 
 auth_router = APIRouter()
 auth_service = AuthService()
+role_checker = RoleChecker(allowed_roles=["admin", "user"])
 
 @auth_router.post('/register', response_model=UserModel, status_code=status.HTTP_201_CREATED)
 async def register_user(
@@ -46,6 +47,7 @@ async def login_user(
             user_data={
                 "user_uid": str(user.uid),
                 "email": user.email,
+                "role": user.role,
             }
         )
 
@@ -94,7 +96,15 @@ async def get_new_access_token(token_details :dict = Depends(RefreshTokenBearer(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail=f"{str(e)[:100]}")
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail=f"{str(e)[:100]}")
-    
+
+
+@auth_router.get('/me')
+async def get_current_user(
+        user = Depends(get_current_user), 
+        _:bool = Depends(role_checker)
+    ):
+    return user
+
 
 @auth_router.post('/logout', status_code=status.HTTP_200_OK)
 async def logout_user(

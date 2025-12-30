@@ -20,7 +20,7 @@ app = FastAPI(
     title="Bookly",
     description="A REST API for book review and rating service",
     version=version,
-    lifespan=life_span,
+    # lifespan=life_span,
 )
 
 
