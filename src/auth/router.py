@@ -8,7 +8,7 @@ import uuid
 
 from database.main import get_session
 from .service import AuthService
-from database.auth.schema import UserCreateModel, UserModel, UserLoginModel, UserBookReviewModel
+from database.auth.schema import UserCreateModel, UserModel, UserLoginModel, UserBookReviewModel, EmailModel
 from .utils import create_access_token, verify_password
 from config import env_config
 from .dependencies import RefreshTokenBearer, AccessTokenBearer, get_current_user, RoleChecker
@@ -16,10 +16,20 @@ from database.redis import add_jti_to_blocklist
 from src.error import (
     UserNotFoundError, InvalidCredentialsError, InsufficientPermissionsError
 )
+from src.email.mail import mail, create_message
 
 auth_router = APIRouter()
 auth_service = AuthService()
 role_checker = RoleChecker(allowed_roles=["admin", "user"])
+
+@auth_router.post('/send-mail')
+async def send_mail(emails: EmailModel):
+    emails = emails.addresses
+    html = "<h1>Welcome from Bookly</h1><p>This is a test email sent from the Bookly application.</p>"
+    message = create_message(emails, "Welcome to Bookly", html)
+    await mail.send_message(message)
+    return {"message": "Emails sent successfully."}
+
 
 @auth_router.post('/register', response_model=UserModel, status_code=status.HTTP_201_CREATED)
 async def register_user(
