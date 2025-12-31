@@ -1,11 +1,11 @@
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
-from fastapi.exceptions import HTTPException
+from sqlalchemy.exc import IntegrityError
 from fastapi import status
 from database.auth.models import User
 from database.auth.schema import UserCreateModel
 from .utils import generate_password_hash, verify_password
-from src.error import UserAlreadyExistsError
+from src.error import UserAlreadyExistsError, UsernameAlreadyTakenError
 
 
 class AuthService:
@@ -27,7 +27,17 @@ class AuthService:
         user_exists = await self.check_user_exists(user_data_dict["email"], session)
         if user_exists:
             raise UserAlreadyExistsError()
-        session.add(new_user)
-        await session.commit()
-        await session.refresh(new_user)
-        return new_user
+        try:
+            session.add(new_user)
+            await session.commit()
+            await session.refresh(new_user)
+            return new_user
+        except IntegrityError as e:
+            await session.rollback()
+            msg = str(e.orig)
+            if "ix_users_username" in msg:
+                raise UsernameAlreadyTakenError();
+        except Exception as e:
+            await session.rollback()
+            raise e
+        

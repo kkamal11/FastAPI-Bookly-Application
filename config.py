@@ -1,6 +1,7 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
+    API_VERSION: str = "v1"
     DATABASE_URL: str
     ECHO_SQL: bool = False
     JWT_SECRET_KEY: str

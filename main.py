@@ -1,11 +1,13 @@
 from fastapi import FastAPI, status
+from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 
 from src.books.router import book_router
 from src.auth.router import auth_router
 from src.reviews.router import review_router
 from database.main import init_db
-from src.error import *
+from config import env_config
+from src.error import register_all_errors, register_internal_server_error_handler
 
 @asynccontextmanager
 async def life_span(app: FastAPI):
@@ -16,7 +18,7 @@ async def life_span(app: FastAPI):
     yield
     print(f"=====Shutting down the server=====")
 
-version = "v1"
+version = env_config.API_VERSION
 
 app = FastAPI(
     title="Bookly",
@@ -25,17 +27,8 @@ app = FastAPI(
     # lifespan=life_span,
 )
 
-app.add_exception_handler(
-    UserAlreadyExistsError, 
-    create_exception_handler(
-        status_code=status.HTTP_403_FORBIDDEN,
-        detail={
-            "message": "User with this email already exists.",
-            "error_code": "USER_ALREADY_EXISTS",
-            "resolution": "Please use a different email."
-        }
-    )
-)
+register_all_errors(app)
+register_internal_server_error_handler(app)
 
 
 app.include_router(book_router, prefix=f"/api/{version}/books", tags=["books"])
