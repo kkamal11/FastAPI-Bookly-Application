@@ -58,3 +58,30 @@ def decode_access_token(token: str) -> dict | None:
     except jwt.PyJWTError as e:
         logging.exception(e)
         return None
+
+
+def create_url_safe_token(data: dict):
+    """Create a URL-safe timed token for the given data."""
+    serializer = URLSafeTimedSerializer(
+        env_config.JWT_SECRET_KEY,
+        salt="email-configuration-salt"
+    )
+    token = serializer.dumps(data, salt="email-configuration-salt")
+    return token    
+
+def decode_url_safe_token(token: str, max_age: int = 600):
+    """Decode a URL-safe timed token and return the data."""
+    serializer = URLSafeTimedSerializer(
+        env_config.JWT_SECRET_KEY,
+        salt="email-configuration-salt"
+    )
+    try:
+        token_data = serializer.loads(
+            token,
+            salt="email-configuration-salt",
+            max_age=max_age
+        )
+        return token_data
+    except Exception as e:
+        logging.exception(str(e))
+        return None

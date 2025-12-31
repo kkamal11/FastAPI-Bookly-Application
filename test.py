@@ -2,5 +2,5 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
 
-
-print(BASE_DIR)
+TEMPLATE_FOLDER = Path(BASE_DIR, "templates")
+print(TEMPLATE_FOLDER)

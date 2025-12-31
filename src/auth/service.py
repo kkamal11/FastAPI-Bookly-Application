@@ -5,7 +5,7 @@ from fastapi import status
 from database.auth.models import User
 from database.auth.schema import UserCreateModel
 from .utils import generate_password_hash, verify_password
-from src.error import UserAlreadyExistsError, UsernameAlreadyTakenError
+from src.error import UserAlreadyExistsError, UsernameAlreadyTakenError, UserNotFoundError
 
 
 class AuthService:
@@ -40,4 +40,15 @@ class AuthService:
         except Exception as e:
             await session.rollback()
             raise e
+    
+    async def update_user_data(self, user_data, session: AsyncSession) -> User | None:
+        email = user_data.get("email")
+        user = await self.get_user_by_email(email, session)
+        if not user:
+            raise UserNotFoundError()
+        for key, value in user_data.items():
+            setattr(user, key, value)
+        await session.commit()
+        await session.refresh(user)
+        return user
         

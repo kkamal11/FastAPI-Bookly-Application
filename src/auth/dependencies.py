@@ -12,7 +12,8 @@ from database.main import get_session
 from .service import AuthService
 from database.auth.models import User
 from src.error import InvalidTokenError, RevokedTokenError, InvalidCredentialsError,\
-AccessTokenRequiredError, RefreshTokenRequiredError, UserNotFoundError, InsufficientPermissionsError
+    AccessTokenRequiredError, RefreshTokenRequiredError, UserNotFoundError, InsufficientPermissionsError,\
+    UserAccountNotVerifiedError
 
 user_service = AuthService()
 
@@ -113,6 +114,8 @@ class RoleChecker:
         self.allowed_roles = allowed_roles
     
     async def __call__(self, current_user: User = Depends(get_current_user)) -> None:
+        if not current_user.is_verified:
+            raise UserAccountNotVerifiedError()
         if current_user.role in self.allowed_roles:
             return True
         raise InsufficientPermissionsError()

@@ -25,6 +25,10 @@ class UserModel(BaseModel):
     created_at: datetime
     updated_at: datetime
 
+class RegisterUseEmailResponseModel(BaseModel):
+    message: str
+    user: UserModel
+
 
 class UserWithBooksModel(UserModel):
     books: List[Book]

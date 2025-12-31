@@ -57,6 +57,19 @@ class InternalServerError(BooklyException):
     """Exception raised for internal server errors."""
     pass
 
+class FailedInSendingEmailError(BooklyException):
+    """Exception raised when email sending fails."""
+    pass
+
+
+class FailedInVerifyingUserError(BooklyException):
+    """Exception raised when user verification fails."""
+    pass
+
+class UserAccountNotVerifiedError(BooklyException):
+    """Exception raised when a user account is not verified."""
+    pass
+
 def create_exception_handler(status_code: int, detail: Any) -> Callable[[Request, Exception],JSONResponse]:
     async def exception_handler(request: Request, exc: Exception) -> JSONResponse:
         return JSONResponse(
@@ -131,6 +144,40 @@ def register_all_errors(app: FastAPI):
                 "message": "You do not have sufficient permissions to perform this action.",
                 "error_code": "INSUFFICIENT_PERMISSIONS",
                 "resolution": "Please contact the administrator if you believe this is an error."
+            }
+        )
+    )
+    app.add_exception_handler(
+        FailedInSendingEmailError,
+        create_exception_handler(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "message": "Failed to send verification email.",
+                "error_code": "FAILED_IN_SENDING_EMAIL",
+                "resolution": "Please try again later."
+            }
+        )
+    )
+    app.add_exception_handler(
+        FailedInVerifyingUserError,
+        create_exception_handler(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "message": "Failed to verify user.",
+                "error_code": "FAILED_IN_VERIFYING_USER",
+                "resolution": "Please try again later."
+            }
+        )
+    )
+
+    app.add_exception_handler(
+        UserAccountNotVerifiedError,
+        create_exception_handler(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "message": "User account is not verified.",
+                "error_code": "USER_ACCOUNT_NOT_VERIFIED",
+                "resolution": "Please verify your account to proceed."
             }
         )
     )

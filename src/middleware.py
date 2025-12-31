@@ -9,7 +9,7 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 logger = logging.getLogger("uvicorn.access")
 logger.disabled = True
 
-EXCLUDED_PATHS = ["/auth/login","/auth/register"]
+EXCLUDED_PATHS = ["/auth/login","/auth/register", "verify-email", "/auth/refresh-token"]
 
 def register_middleware(app: FastAPI):
     
