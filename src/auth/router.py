@@ -1,4 +1,4 @@
-from fastapi import status, APIRouter, Depends
+from fastapi import status, APIRouter, Depends, BackgroundTasks
 from fastapi.exceptions import HTTPException
 from fastapi.responses import JSONResponse
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -39,6 +39,7 @@ async def send_mail(emails: EmailModel):
 @auth_router.post('/register', response_model=RegisterUseEmailResponseModel, status_code=status.HTTP_201_CREATED)
 async def register_user(
     user_data: UserCreateModel,
+    bg_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_session)
 ):
     user = await auth_service.register_user(user_data, session)
@@ -47,7 +48,8 @@ async def register_user(
         email_sent = True
         try:
             token_data = create_url_safe_token({"email": user.email})
-            await email_service.send_html_mail_to_user_email(
+            bg_tasks.add_task(
+                email_service.send_html_mail_to_user_email,
                 email=user.email,
                 subject="Verify your Bookly account",
                 html_template_data={
@@ -68,7 +70,10 @@ async def register_user(
     }
 
 @auth_router.get('/verify-email', status_code=status.HTTP_200_OK)
-async def verify_email(token: str, session: AsyncSession = Depends(get_session)):
+async def verify_email(
+    token: str, 
+    bg_tasks: BackgroundTasks,
+    session: AsyncSession = Depends(get_session)):
     try:
         token_data = decode_url_safe_token(token)
         email = token_data.get("email")
@@ -92,7 +97,8 @@ async def verify_email(token: str, session: AsyncSession = Depends(get_session))
         if not updated_user.is_verified:
             raise FailedInVerifyingUserError()
         try:
-            await email_service.send_html_mail_to_user_email(
+            bg_tasks.add_task(
+                email_service.send_html_mail_to_user_email,
                 email=user.email,
                 subject="Account is Verified - Bookly",
                 html_template_data={
@@ -206,7 +212,10 @@ async def logout_user(
     
 
 @auth_router.post('/pswd-reset-req', status_code=status.HTTP_200_OK)
-async def password_reset_request(email_data: PasswordResetRequestModel, session: AsyncSession=Depends(get_session)):
+async def password_reset_request(
+    email_data: PasswordResetRequestModel, 
+    bg_tasks: BackgroundTasks,
+    session: AsyncSession=Depends(get_session)):
     email = email_data.email
     user = await auth_service.get_user_by_email(email, session)
     if not user:
@@ -214,7 +223,8 @@ async def password_reset_request(email_data: PasswordResetRequestModel, session:
     email_sent = True
     try:
         token_data = create_url_safe_token({"email": user.email})
-        await email_service.send_html_mail_to_user_email(
+        bg_tasks.add_task(
+        email_service.send_html_mail_to_user_email,
             email=user.email,
             subject="Password Reset Request - Bookly",
             html_template_data={
@@ -241,6 +251,7 @@ async def password_reset_request(email_data: PasswordResetRequestModel, session:
 @auth_router.post('/pswd-reset-confirm', status_code=status.HTTP_200_OK)
 async def reset_user_account_password(
     token: str, passwords:PasswordResetModel, 
+    bg_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_session)
     ):
     if passwords.new_password != passwords.confirm_new_password:
@@ -283,7 +294,8 @@ async def reset_user_account_password(
     updated_user = await auth_service.update_user_data(user_data, session)
     if updated_user:
         try:
-            await email_service.send_html_mail_to_user_email(
+            bg_tasks.add_task(
+                email_service.send_html_mail_to_user_email,
                 email=user.email,
                 subject="Password Reset Successful - Bookly",
                 html_template_data={
