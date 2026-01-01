@@ -1,6 +1,8 @@
+from fastapi import status
+from fastapi.exceptions import HTTPException
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
-from itsdangerous import URLSafeTimedSerializer
+from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 import jwt
 import uuid
 import logging
@@ -63,8 +65,7 @@ def decode_access_token(token: str) -> dict | None:
 def create_url_safe_token(data: dict):
     """Create a URL-safe timed token for the given data."""
     serializer = URLSafeTimedSerializer(
-        env_config.JWT_SECRET_KEY,
-        salt="email-configuration-salt"
+        env_config.JWT_SECRET_KEY
     )
     token = serializer.dumps(data, salt="email-configuration-salt")
     return token    
@@ -72,8 +73,7 @@ def create_url_safe_token(data: dict):
 def decode_url_safe_token(token: str, max_age: int = 600):
     """Decode a URL-safe timed token and return the data."""
     serializer = URLSafeTimedSerializer(
-        env_config.JWT_SECRET_KEY,
-        salt="email-configuration-salt"
+        env_config.JWT_SECRET_KEY
     )
     try:
         token_data = serializer.loads(
@@ -82,6 +82,10 @@ def decode_url_safe_token(token: str, max_age: int = 600):
             max_age=max_age
         )
         return token_data
+    except SignatureExpired as e1:
+        raise e1
+    except BadSignature as e2:
+        raise e2
     except Exception as e:
         logging.exception(str(e))
-        return None
+        raise e

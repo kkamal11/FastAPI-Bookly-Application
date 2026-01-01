@@ -70,6 +70,10 @@ class UserAccountNotVerifiedError(BooklyException):
     """Exception raised when a user account is not verified."""
     pass
 
+class FailedInResettingPasswordError(BooklyException):
+    """Exception raised when password resetting fails."""
+    pass
+
 def create_exception_handler(status_code: int, detail: Any) -> Callable[[Request, Exception],JSONResponse]:
     async def exception_handler(request: Request, exc: Exception) -> JSONResponse:
         return JSONResponse(
@@ -178,6 +182,18 @@ def register_all_errors(app: FastAPI):
                 "message": "User account is not verified.",
                 "error_code": "USER_ACCOUNT_NOT_VERIFIED",
                 "resolution": "Please verify your account to proceed."
+            }
+        )
+    )
+
+    app.add_exception_handler(
+        FailedInResettingPasswordError,
+        create_exception_handler(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "message": "Failed to reset password.",
+                "error_code": "FAILED_IN_RESETTING_PASSWORD",
+                "resolution": "Please try again later."
             }
         )
     )

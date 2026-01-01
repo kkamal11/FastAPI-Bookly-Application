@@ -47,6 +47,8 @@ class AuthService:
         if not user:
             raise UserNotFoundError()
         for key, value in user_data.items():
+            if key == "email":
+                continue
             setattr(user, key, value)
         await session.commit()
         await session.refresh(user)

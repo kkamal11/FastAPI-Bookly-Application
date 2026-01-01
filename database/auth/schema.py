@@ -13,7 +13,6 @@ class UserCreateModel(BaseModel):
     first_name: str = Field(min_length=4, max_length=25)
     last_name: str = Field(min_length=4, max_length=25)
 
-
 class UserModel(BaseModel):
     uid: uuid.UUID
     username: str
@@ -29,7 +28,6 @@ class RegisterUseEmailResponseModel(BaseModel):
     message: str
     user: UserModel
 
-
 class UserWithBooksModel(UserModel):
     books: List[Book]
 
@@ -37,12 +35,18 @@ class UserBookReviewModel(UserWithBooksModel):
     books: List[Book]
     reviews: List[ReviewModel]
 
-
 class UserLoginModel(BaseModel):
     email: str = Field(min_length=6)
     password: str
 
-
 class EmailModel(BaseModel):
     addresses: List[str]
+
+class PasswordResetRequestModel(BaseModel):
+    email: str = Field(min_length=6)
+
+class PasswordResetModel(BaseModel):
+    new_password: str
+    confirm_new_password: str
+    
 
