@@ -10,7 +10,7 @@ from logger.app_logger import app_logger
 from logger.user_logger import get_user_logger
 
 
-EXCLUDED_PATHS = ["/auth/login","/auth/register", "verify-email", "/auth/refresh-token"]
+EXCLUDED_PATHS = ["/test","/auth/login","/auth/register", "verify-email", "/auth/refresh-token"]
 
 class LoggingMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
@@ -45,9 +45,6 @@ class LoggingMiddleware(BaseHTTPMiddleware):
 
 def register_middleware(app: FastAPI):
     
-    app.add_middleware(
-        LoggingMiddleware
-    )
     """
     @app.middleware("http")
     async def custom_logging(request: Request, call_next):
@@ -65,9 +62,11 @@ def register_middleware(app: FastAPI):
 
     @app.middleware("http")
     async def authentication_middleware(request: Request, call_next):
+        if "/test" in request.url.path:
+            return await call_next(request)
         if any(p in request.url.path for p in EXCLUDED_PATHS):
             return await call_next(request)
-        if any(p in request.url.path for p in ["/docs", "/redoc", "/openapi.json"]):
+        if any(p in request.url.path for p in ["/test","/docs", "/redoc", "/openapi.json"]):
             return await call_next(request)
         auth_header = request.headers.get("Authorization")
         if not auth_header:
@@ -80,7 +79,9 @@ def register_middleware(app: FastAPI):
             )
         response = await call_next(request)
         return response
-    
+    app.add_middleware(
+        LoggingMiddleware
+    )
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],

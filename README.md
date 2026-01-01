@@ -1,4 +1,6 @@
-# 📚 Bookly – FastAPI Beyond CRUD
+# 📚 Bookly – FastAPI Beyond CRUD ## 🚀 Live API
+
+[![Live API](https://img.shields.io/badge/Live-Bookly%20API-brightgreen?style=for-the-badge&logo=fastapi)](https://bookly-api-f3af.onrender.com/test)
 
 Bookly is a **production-ready backend API** built with **FastAPI**, going far beyond basic CRUD operations.  
 It demonstrates **clean architecture**, **async SQLModel**, **JWT authentication**, **email workflows**, **Role-based access control**, **custom logging**, and **robust error handling**.

@@ -33,6 +33,17 @@ app = FastAPI(
     }
 )
 
+@app.get("/test", tags=["Health"])
+def root():
+    version = env_config.API_VERSION
+    return {
+        "message": "🚀 Welcome to Bookly API",
+        "documentation": {
+            "swagger": f"https://bookly-api-f3af.onrender.com/api/{version}/docs",
+            "redoc": f"https://bookly-api-f3af.onrender.com/api/{version}/redoc"
+        }
+    }
+
 register_all_errors(app)
 register_internal_server_error_handler(app)
 
