@@ -21,6 +21,8 @@ from src.error import (
         FailedInVerifyingUserError, FailedInResettingPasswordError
 )
 from src.email.mail import EmailService
+from logger.user_logger import get_user_logger
+from logger.app_logger import app_logger
 
 auth_router = APIRouter()
 auth_service = AuthService()
@@ -29,6 +31,7 @@ role_checker = RoleChecker(allowed_roles=["admin", "user"])
 
 @auth_router.post('/send-mail')
 async def send_mail(emails: EmailModel):
+    app_logger.inf(f"Inside send mail func {emails}")
     emails = emails.addresses
     html = "<h1>Welcome from Bookly</h1><p>This is a test email sent from the Bookly application.</p>"
     message = email_service.create_message(emails, "Welcome to Bookly", html)
@@ -43,11 +46,15 @@ async def register_user(
     session: AsyncSession = Depends(get_session)
 ):
     user = await auth_service.register_user(user_data, session)
+    logger = get_user_logger(user.username)
+    logger.info(f"Inside register user. email = {user.email}")
     message = "User registered successfully. Please check your email to verify your account."
     if user:
+        logger.info("User Created. Going to send email")
         email_sent = True
         try:
             token_data = create_url_safe_token({"email": user.email})
+            logger.info("Token created for the user. sending email")
             bg_tasks.add_task(
                 email_service.send_html_mail_to_user_email,
                 email=user.email,
@@ -60,10 +67,13 @@ async def register_user(
                 },
                 html_template_name="verify_account.html"
             )
+            logger.info("Email sent")
         except Exception as e:
+            logger.info(f"Error while sending email { str(e)}")
             email_sent = False
         if not email_sent:
             message = "User registered successfully, but we could not send a verification email. Please verify your email address or request a resend."
+    logger.info("Returing successfully after user registeration")
     return {
         "message": message,
         "user":user
@@ -74,29 +84,39 @@ async def verify_email(
     token: str, 
     bg_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_session)):
+    app_logger.info("Inside verify email with token ")
     try:
+        app_logger.info(f"Going to decode token data {str(token)}")
         token_data = decode_url_safe_token(token)
         email = token_data.get("email")
+        app_logger.info(f"Token data decode, email = {email}")
         user = None
         if email:
             user = await auth_service.get_user_by_email(email, session)
         if user is None:
+            app_logger.error(f"User not found for email {email}")
             raise UserNotFoundError()
+        user_logger = get_user_logger(user.username)
         if user.is_verified:
+            user_logger.info("User is already verified")
             return JSONResponse(
                 status_code=status.HTTP_200_OK,
                 content={
                     "message": "Email is already verified."
                 }
             )
+        user_logger.info("Going to verify user")
         user_data = {
             "email": user.email,
             "is_verified": True
         }
+        user_logger.info("Going to update the user verfied flag")
         updated_user = await auth_service.update_user_data(user_data, session)
         if not updated_user.is_verified:
+            user_logger.error("Failed in verifying the user")
             raise FailedInVerifyingUserError()
         try:
+            user_logger.info("User verified. sending email")
             bg_tasks.add_task(
                 email_service.send_html_mail_to_user_email,
                 email=user.email,
@@ -109,6 +129,7 @@ async def verify_email(
                 html_template_name="verified_acc_success.html"
             )   
         except Exception as e:
+                user_logger.error(f"Could not send email {str(e)}")
                 pass
         return JSONResponse(
             status_code=status.HTTP_200_OK,
@@ -117,6 +138,7 @@ async def verify_email(
             }
         )
     except Exception as e:
+        app_logger.exception("Exception her ", str(e))
         raise FailedInVerifyingUserError()
 
 @auth_router.post('/login', status_code=status.HTTP_200_OK)

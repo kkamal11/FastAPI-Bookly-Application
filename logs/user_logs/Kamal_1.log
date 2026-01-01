@@ -1,0 +1,24 @@
+2026-01-01 12:38:38,756 | INFO | Inside register user. email = kishorkamal7091@gmail.com
+2026-01-01 12:38:38,760 | INFO | User Created. Going to send email
+2026-01-01 12:38:38,766 | INFO | Token created for the user. sending email
+2026-01-01 12:38:38,767 | INFO | Email sent
+2026-01-01 12:38:38,767 | INFO | Returing successfully after user registeration
+2026-01-01 12:46:16,052 | INFO | Going to verify user
+2026-01-01 12:46:16,052 | INFO | Going to update the user verfied flag
+2026-01-01 12:46:19,575 | INFO | User verified. sending email
+2026-01-01 12:49:45,406 | INFO | Inside register user. email = kishorkamal7091@gmail.com
+2026-01-01 12:49:45,408 | INFO | User Created. Going to send email
+2026-01-01 12:49:45,411 | INFO | Token created for the user. sending email
+2026-01-01 12:49:45,412 | INFO | Email sent
+2026-01-01 12:49:45,412 | INFO | Returing successfully after user registeration
+2026-01-01 12:50:32,508 | INFO | Going to verify user
+2026-01-01 12:50:32,509 | INFO | Going to update the user verfied flag
+2026-01-01 12:50:35,253 | INFO | User verified. sending email
+2026-01-01 12:58:26,151 | INFO | Inside register user. email = kishorkamal7091@gmail.com
+2026-01-01 12:58:26,153 | INFO | User Created. Going to send email
+2026-01-01 12:58:26,156 | INFO | Token created for the user. sending email
+2026-01-01 12:58:26,156 | INFO | Email sent
+2026-01-01 12:58:26,157 | INFO | Returing successfully after user registeration
+2026-01-01 12:58:51,749 | INFO | Going to verify user
+2026-01-01 12:58:51,749 | INFO | Going to update the user verfied flag
+2026-01-01 12:58:54,615 | INFO | User verified. sending email

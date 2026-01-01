@@ -2,17 +2,53 @@ from fastapi import FastAPI, status
 from fastapi.responses import JSONResponse
 from fastapi.requests import Request
 import time
-import logging
 from fastapi.middleware.cors import CORSMiddleware 
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 
-logger = logging.getLogger("uvicorn.access")
-logger.disabled = False
+from logger.app_logger import app_logger
+from logger.user_logger import get_user_logger
+
 
 EXCLUDED_PATHS = ["/auth/login","/auth/register", "verify-email", "/auth/refresh-token"]
 
+class LoggingMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        start_time = time.time()
+        response = await call_next(request)
+        process_time = time.time() - start_time
+
+        client = request.client
+        client_info = f"{client.host}:{client.port}" if client else "unknown"
+
+        message = (
+            f"{client_info} | "
+            f"{request.method} | "
+            f"{request.url.path} | "
+            f"{response.status_code} | "
+            f"{process_time:.4f}s"
+        )
+
+        app_logger.info(message)
+
+        user = getattr(request.state, "user", None)
+        if user:
+            user_logger = get_user_logger(user.username)
+            user_logger.info(
+                f"{request.method} {request.url.path} "
+                f"-> {response.status_code} "
+                f"in {process_time:.4f}s"
+            )
+
+        return response
+
+
 def register_middleware(app: FastAPI):
     
+    app.add_middleware(
+        LoggingMiddleware
+    )
+    """
     @app.middleware("http")
     async def custom_logging(request: Request, call_next):
         start_time = time.time()
@@ -25,7 +61,7 @@ def register_middleware(app: FastAPI):
         print(message)
                 
         return response
-
+    """
 
     @app.middleware("http")
     async def authentication_middleware(request: Request, call_next):
@@ -57,4 +93,3 @@ def register_middleware(app: FastAPI):
         TrustedHostMiddleware,
         allowed_hosts=["*","localhost"]
     )
-

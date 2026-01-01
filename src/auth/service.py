@@ -6,13 +6,15 @@ from database.auth.models import User
 from database.auth.schema import UserCreateModel
 from .utils import generate_password_hash, verify_password
 from src.error import UserAlreadyExistsError, UsernameAlreadyTakenError, UserNotFoundError
-
+from logger.user_logger import get_user_logger
 
 class AuthService:
     async def get_user_by_email(self, email: str, session: AsyncSession) -> User | None:
         query = select(User).where(User.email == email)
         result = await session.execute(query)
         user = result.scalar_one_or_none()
+        logger = get_user_logger(user.username)
+        logger.info("Insider auth.service.get_user_by_email")
         return user
     
     async def check_user_exists(self, email: str, session: AsyncSession) -> bool:

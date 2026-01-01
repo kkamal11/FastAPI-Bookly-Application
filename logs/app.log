@@ -1,0 +1,8 @@
+2026-01-01 12:16:35,883 | INFO | 127.0.0.1:52462 | GET | /api/v1/auth/me | 200 | 6.3006s
+2026-01-01 12:38:38,772 | INFO | 127.0.0.1:49008 | POST | /api/v1/auth/register | 201 | 8.6900s
+2026-01-01 12:45:28,144 | INFO | 127.0.0.1:46316 | GET | /api/v1/auth/verify-email | 500 | 0.5696s
+2026-01-01 12:46:08,734 | INFO | Going to decode token data
+2026-01-01 12:46:19,576 | INFO | 127.0.0.1:36958 | GET | /api/v1/auth/verify-email | 200 | 11.3650s
+2026-01-01 12:49:45,417 | INFO | 127.0.0.1:54660 | POST | /api/v1/auth/register | 201 | 8.9048s
+2026-01-01 12:50:30,281 | INFO | Going to decode token data
+2026-01-01 12:50:35,254 | INFO | 127.0.0.1:38486 | GET | /api/v1/auth/verify-email | 200 | 5.1422s

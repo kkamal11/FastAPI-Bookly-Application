@@ -25,6 +25,12 @@ app = FastAPI(
     description="A REST API for book review and rating service",
     version=version,
     # lifespan=life_span,
+    docs_url=f"/api/{version}/docs",
+    redoc_url=f"/api/{version}/redoc",
+    contact={
+        "name": "Bookly Support",
+        "email": "email.support@bookly.com"
+    }
 )
 
 register_all_errors(app)
