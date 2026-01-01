@@ -13,8 +13,6 @@ class AuthService:
         query = select(User).where(User.email == email)
         result = await session.execute(query)
         user = result.scalar_one_or_none()
-        logger = get_user_logger(user.username)
-        logger.info("Insider auth.service.get_user_by_email")
         return user
     
     async def check_user_exists(self, email: str, session: AsyncSession) -> bool:
